@@ -14,7 +14,7 @@ class Wdebug {
                 $this->db = mysqli_connect($host[1], $user[1], $pass[1], $base[1]);
 
                 if (mysqli_connect_errno($this->db))
-                    echo "杩炴帴 MySQL 澶辫触:" . mysqli_connect_error();
+                    echo "连接 MySQL 失败:" . mysqli_connect_error();
             }
         }
 
@@ -48,15 +48,15 @@ class Wdebug {
                 }else if(preg_match('/id/', $columnRow['COLUMN_NAME'])){
                     array_push($insValArr, 2);
                 }else if($columnRow['DATA_TYPE'] === "char"){
-                    array_push($insValArr, "'杩欐槸瀛楃娴嬭瘯鏁版嵁'");
+                    array_push($insValArr, "'这是字符测试数据'");
                 }else if($columnRow['DATA_TYPE'] === "int" || $columnRow['DATA_TYPE'] === "tinyint"){
                     array_push($insValArr, 2);
                 }else if($columnRow['DATA_TYPE'] === "float"){
                     array_push($insValArr, 2.0);
                 }else if($columnRow['DATA_TYPE'] === "text"){
-                    array_push($insValArr, "'杩欐槸鏂囨湰娴嬭瘯鏁版嵁'");
+                    array_push($insValArr, "'这是文本测试数据'");
                 }else if($columnRow['DATA_TYPE'] === "varchar"){
-                    array_push($insValArr, "'杩欐槸鍙彉闀垮瓧绗︿覆娴嬭瘯鏁版嵁'");
+                    array_push($insValArr, "'这是可变长字符串测试数据'");
                 }else{
                     dump($columnRow['DATA_TYPE']);exit;
                 }
@@ -71,42 +71,42 @@ class Wdebug {
 
 
 
-    //鍚堝苟OP涓嶨PC 绠楁硶
+    //合并OP与GPC 算法
     private function MergeOpAndGpc($opObjList, $gpcObjList){
         if( !$opObjList || !$gpcObjList) return False;
 
-        //op涓嶨PC鏁村悎
-        array_unshift($opObjList,array('opName'=>'global', 'opPos'=>0));    //鎻掑叆鍏ㄥ眬鍏冪礌
-        array_push($opObjList,array('opName'=>'ending', 'opPos'=>1000000)); //鎻掑叆杈呭姪鍏冪礌
+        //op与GPC整合
+        array_unshift($opObjList,array('opName'=>'global', 'opPos'=>0));    //插入全局元素
+        array_push($opObjList,array('opName'=>'ending', 'opPos'=>1000000)); //插入辅助元素
         foreach($opObjList as $idx=>$opObj){
-            if($idx === count($opObjList)-1) break;                         //鍊掓暟绗簩涓鐞嗗畬鍚庨€€鍑�;
-            $opPosition = $opObjList[$idx+1]['opPos'];                      //鍙栦笅涓€涓厓绱犵殑op鍋忕Щ閲�;
-            $tmpGpcList = array();                                          //瀛樻斁婊¤冻鏉′欢鐨刧pc
+            if($idx === count($opObjList)-1) break;                         //倒数第二个处理完后退出;
+            $opPosition = $opObjList[$idx+1]['opPos'];                      //取下一个元素的op偏移量;
+            $tmpGpcList = array();                                          //存放满足条件的gpc
             foreach($gpcObjList as $gpcObj){
                 $gpcPosition = $gpcObj['gpcPos'];
-                if($gpcPosition < $opPosition){                             //濡傛灉鍋忕Щ閲廹pc < op鍔犲叆褰撳墠鍏冪礌鐨刲ist
+                if($gpcPosition < $opPosition){                             //如果偏移量gpc < op加入当前元素的list
                     array_push($tmpGpcList, $gpcObj['gpcName']);
                     array_shift($gpcObjList);
-                    if(count($gpcObjList) === 0){                           //濡傛灉gpc鍙橀噺琚竻绌轰簡锛屽仛鏈€鍚庣殑鏁村悎
-                        $tmpGpcList = array_unique($tmpGpcList);            //鏁扮粍鍘婚噸
-                        $opObjList[$idx]['gpcList'] = $tmpGpcList;          //淇濆瓨鍙傛暟
+                    if(count($gpcObjList) === 0){                           //如果gpc变量被清空了，做最后的整合
+                        $tmpGpcList = array_unique($tmpGpcList);            //数组去重
+                        $opObjList[$idx]['gpcList'] = $tmpGpcList;          //保存参数
                     }
                 }else{
-                    $tmpGpcList = array_unique($tmpGpcList);                //鏁扮粍鍘婚噸
-                    $opObjList[$idx]['gpcList'] = $tmpGpcList;              //淇濆瓨鍙傛暟
+                    $tmpGpcList = array_unique($tmpGpcList);                //数组去重
+                    $opObjList[$idx]['gpcList'] = $tmpGpcList;              //保存参数
                     break;
                 }
             }
         }//foreach 
-        array_pop($opObjList);                                              //绉婚櫎杈呭姪鍏冪礌
+        array_pop($opObjList);                                              //移除辅助元素
 
         return $opObjList;
     }
 
 
-    //杩斿洖棰勫鍙傛暟
+    //返回预备参数
     private function PrepareUrlParam($paramArr){
-        //鏋勯€犵郴缁熷弬鏁�, 鍏堜粠url璇诲彇鍊硷紝娌℃湁鍒欒祴浜堥粯璁ゅ€�
+        //构造系统参数, 先从url读取值，没有则赋予默认值
         $urlParamArr = array();
 
         $urlParamArr['page']   = 0;
@@ -121,53 +121,53 @@ class Wdebug {
     }
 
 
-    //鑷姩鏂囨。鍏ュ彛鏂规硶
+    //自动文档入口方法
     public function AutoMarkdown($scriptName){
         if(!$scriptName){
             echo "AutoMarkdown need __FILE__";
         }
 
-        //鑾峰彇URL锛屾埅鎴愪袱閮ㄥ垎
+        //获取URL，截成两部分
         $baseUrl = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];  
         $partArr = $this->UrlParamSta($baseUrl);
         $curlUrl = $partArr[0];
         $curlPam = $partArr[1];
 
         
-        //op鍜屾敞閲婁竴璧峰尮閰嶏紝鍥犱负鏃犳敞閲婄殑鏂规硶涓嶅尮閰�
+        //op和注释一起匹配，因为无注释的方法不匹配
         $curCode = file_get_contents($scriptName);
         preg_match_all($this->opRule3, $curCode, $opMatches, PREG_OFFSET_CAPTURE);
         preg_match_all($this->gpcRule1,$curCode, $gpcMatches, PREG_OFFSET_CAPTURE);
 
-        //鑻ヤ竴涓兘鍖归厤涓嶅埌锛岄€€鍑�   
+        //若一个都匹配不到，退出   
         if($gpcMatches === NULL || $opMatches === NULL)
             dump("[ERROR]: GPC or OP no match!!") + die();
 
         $gpcObjList = $opObjList = array();
-        $opList  = $opMatches[2];               //鍖归厤op
-        $comList = $opMatches[1];               //鍖归厤娉ㄩ噴
-        $gpcList = $gpcMatches[1];              //鍖归厤gpc
+        $opList  = $opMatches[2];               //匹配op
+        $comList = $opMatches[1];               //匹配注释
+        $gpcList = $gpcMatches[1];              //匹配gpc
 
-        //鍚堝苟[comList, opList] 渚濊禆 preg_match_all 椤哄簭
+        //合并[comList, opList] 依赖 preg_match_all 顺序
         foreach($opList as $idx => $opItem) 
             array_push($opObjList, ['opName'=>$opItem[0], 'opPos'=>$opItem[1], 'opCom'=>$comList[$idx][0]]);
         foreach($gpcList as $gpcItem) 
             array_push($gpcObjList, ['gpcName'=>$gpcItem[0], 'gpcPos'=>$gpcItem[1]]);
 
 
-        //鍚堝苟[opList, gpcList];
+        //合并[opList, gpcList];
         $mergeObjList = $this->MergeOpAndGpc($opObjList, $gpcObjList);
 
-        //棰勫璇锋眰鍙傛暟
+        //预备请求参数
         $urlParamArr = $this->PrepareUrlParam($curlPam);
 
-        //閫氱敤鍙傛暟瀵煎叆璇锋眰鍙傛暟锛宱p鍚庨潰浼氳瑕嗙洊
+        //通用参数导入请求参数，op后面会被覆盖
         if(is_array($mergeObjList))
             foreach($mergeObjList[0]['gpcList'] as $key)
                 $urlParamArr[$key] = 2;
 
 
-        //绋嬪簭娴佷富鍏ュ彛
+        //程序流主入口
         $this->main($mergeObjList, $curlUrl, $urlParamArr);
     }//func: AutoMarkdown
 
@@ -195,7 +195,7 @@ class Wdebug {
         }
     }
 
-    //瀵硅薄 => URL
+    //对象 => URL
     public function UrlParamAts($arr){
         $str = "";
         foreach($arr as $k => $v)
@@ -203,7 +203,7 @@ class Wdebug {
         return $str;
     }
 
-    //URL => 瀵硅薄
+    //URL => 对象
     public function UrlParamSta($url){
         $urlParts = explode("?", $url);
         $url = $urlParts[0];
@@ -232,25 +232,25 @@ class Wdebug {
     private function MarkDownHead($opName, $opCom, $opUrl,$opList){
 
         echo "<div style=\"border:1px solid #888;padding:20px;background:#eee\">";
-        echo "**绠€瑕佹弿杩帮細**<br>";
+        echo "**简要描述：**<br>";
         if($opName === "global")
-            echo "- 閫氱敤鍙傛暟: <br><br>";
+            echo "- 通用参数: <br><br>";
         else
             echo "- $opCom <br><br>";
-        echo "**璇锋眰URL锛�**<br>";
+        echo "**请求URL：**<br>";
         echo "`$opUrl`<br><br>";
-        echo "**璇锋眰鏂瑰紡锛�**<br>";
+        echo "**请求方式：**<br>";
         echo "- GET<br><br>";
         echo "<br>";
-        echo "**鍙傛暟锛�**<br>";
+        echo "**参数：**<br>";
         echo "<br><br>";
         $this->MkGpcTable($opList) ;
         echo "<br><br>";
         if($opName !== "global"){
-            echo " **杩斿洖绀轰緥**<br>";
+            echo " **返回示例**<br>";
             #dump($this->HttpGet($opUrl));
         }
-        echo "<br><br>**杩斿洖璇存槑**<br>";
+        echo "<br><br>**返回说明**<br>";
         echo "</div>";
     }//func: MarkDownHead
 
@@ -258,11 +258,11 @@ class Wdebug {
 
     public function MkGpcTable($gpcList){
         if(!count($gpcList)) {
-            echo "鏃犲弬鏁�<br>";
+            echo "无参数<br>";
             return;
         }
     
-        echo "|鍙傛暟鍚峾蹇呴€墊绫诲瀷|璇存槑|<br>";
+        echo "|参数名|必选|类型|说明|<br>";
         echo "| --- | --- | --- | --- |<br>";
         $filter = array('i','m','c','a','do','action','state');
     
@@ -270,13 +270,13 @@ class Wdebug {
             if(preg_match("/(^__)/",$v))
                 continue;
             if($key === "op") {
-                echo "|op|鏄瘄string|$v|<br>";
+                echo "|op|是|string|$v|<br>";
             }
             else if($v === "uniacid")
-                echo "|uniacid|鏄瘄int|绋嬪簭id|<br>";
+                echo "|uniacid|是|int|程序id|<br>";
     
             else if($v === "uid")
-                echo "|uid|鏄瘄int|鐢ㄦ埛id|<br>";
+                echo "|uid|是|int|用户id|<br>";
                 
             else if($v === "op") continue;    
             else if(!in_array($v, $filter)){
@@ -287,7 +287,7 @@ class Wdebug {
                     if(!empty($comment)) break;
                     $comment = $commentRow['COLUMN_COMMENT'];
                 }
-                echo "|$v|鏄瘄int|$commentRow[COLUMN_COMMENT]|<br>";
+                echo "|$v|是|int|$commentRow[COLUMN_COMMENT]|<br>";
             }
         }
     }//func: MkGpcTable
@@ -296,10 +296,10 @@ class Wdebug {
     public function MdTable($array){
         $rnt = [];
         $keyList = [];
-        $tableBanner = "|鍙傛暟鍚峾蹇呴€墊绫诲瀷|璇存槑|<br>";
+        $tableBanner = "|参数名|必选|类型|说明|<br>";
         $tableBanner .= "| --- | --- | --- | --- |<br>";
         foreach($array as $v){
-            $tableBanner .= "|$v|鏄瘄int| |<br>";
+            $tableBanner .= "|$v|是|int| |<br>";
         }
         echo $tableBanner;
     }//func
@@ -316,7 +316,7 @@ class Wdebug {
     public function foreachArr($arr, $keylist, $showAll=false){
         foreach($arr as $k => $v){
             if(!isset($keylist[$k]) || gettype($k) === "integer"){  
-                //瀵逛簬缁撴瀯鏁扮粍鍙彇绗竴鏉℃暟鎹�,鍏朵粬鐨勮烦杩�
+                //对于结构数组只取第一条数据,其他的跳过
                 if(!$showAll){
                     if(gettype($k) === "integer" && !empty($k)) 
                     continue;
@@ -337,8 +337,8 @@ class Wdebug {
     }
 
     public function MarkDownFoot($list){
-        echo '**杩斿洖璇存槑: **<br><br>';
-        echo '|鍙傛暟|绫诲瀷|鎻忚堪|<br>';
+        echo '**返回说明: **<br><br>';
+        echo '|参数|类型|描述|<br>';
         echo '|:-------|:-------|:-------|<br>';
         foreach($list as $arr){
             foreach($arr as $k => $v){
@@ -347,7 +347,7 @@ class Wdebug {
                 $res = mysql_query("select COLUMN_COMMENT from information_schema.columns where COLUMN_NAME = '$k' and COLUMN_COMMENT != '' ");
                 $row = mysql_fetch_assoc($res);
                 if($row) echo $row['COLUMN_COMMENT'] ;
-                else echo "鏃�";
+                else echo "无";
                 echo "|<br>";
             }
         }
@@ -357,7 +357,7 @@ class Wdebug {
         $keylist = Array();
         $keylist = $this->foreachArr($result, $keylist, $showAll);
 
-        echo '**杩斿洖绀轰緥: **<br><br>';
+        echo '**返回示例: **<br><br>';
         $result = json_encode($result, JSON_PRETTY_PRINT);
         $result = $this->DecodeUnicode($result);
         echo "<pre>``` JSON\n $result\n ```</pre>";
@@ -389,7 +389,7 @@ class Wdebug {
             echo "<br><span style='color:blue'>** $tableName **</span><br><br>";
     
     
-            echo "|瀛楁鍚峾绫诲瀷|閿€紎鏄惁涓虹┖|鎵╁睍|娉ㄩ噴|<br>";
+            echo "|字段名|类型|键值|是否为空|扩展|注释|<br>";
             echo "| ---- | -- | -- | ------ | -- | -- | -- |<br>";
             while($row = mysql_fetch_assoc($res)){
                 if($highLightArr && in_array($row[column_name], $highLightArr)) {
