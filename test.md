@@ -206,7 +206,7 @@ function pdo_getcolumn($tablename, $condition = array(), $field) {
 
 这里只是简单的转移给pdo()对象处理，我们跟踪 pdo()对象，定义函数的位置在同一文件头部
 - line 9:
-```
+``` php
 function pdo() {
     global $_W;
     static $db;
