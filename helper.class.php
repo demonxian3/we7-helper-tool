@@ -131,7 +131,7 @@ function wxPayUnifiedOrder($shop_name,$total_price,$notify_url,$openid=""){
     $key = '';
     if(!empty($openid)) $data['openid'] = $openid;
 
-    $data['appid']              = 'wxabc3232464a09b16';
+    $data['appid']              = '';
     $data['mch_id']             = '1524576121';
     $data['nonce_str']          = makeNonceStr();
     $data['device_info']        = "WEB";
