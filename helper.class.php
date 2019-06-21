@@ -125,10 +125,10 @@ function getPaymentPlatform(){
 //JSAPI 必须传openid
 function wxPayUnifiedOrder($shop_name,$total_price,$notify_url,$openid=""){
     global $_W;
-    $appid = 'wxabc3232464a09b16';
-    $appsecret='799cfb03218c562977f8059f88255269';
+    $appid = '';
+    $appsecret='';
     $url = "https://api.mch.weixin.qq.com/pay/unifiedorder";
-    $key = '192019250b4c09247ui02edty69f6a2d';
+    $key = '';
     if(!empty($openid)) $data['openid'] = $openid;
 
     $data['appid']              = 'wxabc3232464a09b16';
