@@ -22,8 +22,8 @@ vim framework/bootstrap.inc.php
 添加下面一句到 42 行   
 
 ``` php
-load()->func('wdebug');     
-dump(['hello']);
+load()->func('helper');     
+
 ```
 
 
