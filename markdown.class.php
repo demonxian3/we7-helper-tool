@@ -1,6 +1,6 @@
 <?php
 
-class Wdebug {
+class Markdown {
     public function __construct($connstr=""){
 
         #mysql:root@localhost/database/password
