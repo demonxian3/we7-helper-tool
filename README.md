@@ -1,4 +1,4 @@
-# we7-tool-helper
+# we7-helper-tool
 微擎工具助手
 
 ### 如何使用? how to use?
