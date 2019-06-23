@@ -1,46 +1,103 @@
-# we7-helper-tool
-微擎工具助手
+# 微擎助手
 
-### 如何使用? how to use?
+### 安装
+- 放到微擎framework目录即可
 
-1. 引入wdebug 方法 ( load wdebug function )
-
-``` bash
-    vim framework/bootstrap.inc.php
+```
+▾ framework/  
+  ▸ builtin/ 
+  ▾ class/  
+      myalipay.class.php  
+      mywxpay.class.php 
+      markdown.class.php 
+  ▾ function/
+      helper.func.php
 ```
 
-添加下面一句到 42 行   (Add the following sentence to 42 lines )
+- 全局引入
+``` bash
+vim framework/bootstrap.inc.php
+```
 
->  load()-\>func('wdebug');     
+添加下面一句到 42 行   
 
-<br>
-<br>
-<br>
-<br>
+``` php
+load()->func('wdebug');     
+dump(['hello']);
+```
 
-2. 存放进加载类 ( Put in the file )
 
-> framework/class/wdebug.class.php   
-> framework/function/wdebug.func.php  
+### 使用
 
-<br>
-<br>
-<br>
-<br>
+1. 公共函数
+
+``` php
+dump($var);             #格式化打印变量
+pdo_showsql(1);         #打印最后一条SQL语句
+pdo_showsql();          #打印所有SQL语句
+performanceTest(1);     #性能测试，输出内存和时间
+//这里放被测试的代码 
+performanceTest();
+clearSession();         #清除会话
+getPaymentPlatform();   #判断微信还是支付宝
+```
  
-3. 功能说明 （Functional description）
 
-格式化打印变量          function dump($var)    
-打印最近SQL语句         function pdo\_lastsql()    
-打印所有SQL语句         function pdo\_showsql()    
-依据条件插入数据        function pdo\_setdata($tableName, $update, $condition)    
-生成Markdown头部        function showHead($filename)   
-生成Markdown尾部        function showFoot($result)      
-显示表格注释MD          function showComment($tableName, $highLightArr)      
-关键字显示表格注释MD    function showCommentByKey($keyword="")      
-显示GPC变量表格         function showGpcTable($arr)      
-显示数组变量表格        function showMdTable($arr)      
-生成测试数据            function makeTestData()      
-性能测试                function performanceTest($begin=false)      
+2. 微信支付
+
+``` php
+$config['mch_id']     = 'your mch_id';
+$config['appid']      = 'your appid';
+$config['appsecret']  = 'your appsecret';
+$config['key']        = 'your pay key';
+$config['notify_url'] = 'http://'. $_SERVER['SERVER_ADDR'].'/notify.php';
+
+$param['body'] = 'your payment title';
+$param['total_fee'] = 300;
+$param['openid'] = $openid;
+$param['out_trade_no'] = $out_trade_no;
+
+//记得配置授权目录，支付目录
+load()->classs('mywxpay');
+$pay = new Mywxpay($config);
+$jsp = $pay->unifiedOrder($param);
+include $this->template('wxpay');
+exit;
+```
+
+3. 支付宝支付
+
+``` php
+$config['app_id'] = 'your app_id';
+$config['notify_url'] = 'http://'. $_SERVER['SERVER_ADDR'].'/notify_url.php';
+$config['return_url'] = 'http://'. $_SERVER['SERVER_ADDR'].'/return_url.php';
+$config['alipay_public_key'] = 'MIIBIjANBg...';
+$config['merchant_private_key'] = 'MIIEvQIBADANBgkqhkiG9...';
+
+$param['subject']       = 'payment subject';
+$param['body']          = 'customer description';
+$param['total_amount']  = 300;
+$param['out_trade_no']  = date('YmdHis').time();
+
+//执行完自动弹出支付,界面不像微信要自己写
+load()->classs('myalipay');
+$pay = new Myalipay($config);
+$pay->wapPay($param);
+
+```
+
+4. 自动文档
+
+``` php
+$showdoc = new Markdown($connstr);
+$showdoc->AutoMarkdown(__FILE__);
+$showdoc->AutoResult($result);
+$showdoc->showComment($tableName, $highLightArr);
+$showdoc->showCommentByKeyword("user");
+$showdoc->MkGpcTable($_GPC);
+$showdoc->MdTable(['a','b']);
+$showdoc->AutoInsertData();
+```
+
 
 
