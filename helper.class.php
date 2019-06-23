@@ -1,4 +1,3 @@
-<meta charset='utf-8'>
 <?php 
 defined('IN_IA') or exit('Access Denied');
 
@@ -16,8 +15,9 @@ load()->classs("markdown");
 
 /****************************
           Common
- ****************************/
+****************************/
 function dump($var, $quit=true, $file=""){
+
     echo HDIVELE . HPREELE;
     $varType = gettype($var);
 
@@ -60,6 +60,14 @@ function performanceTest($begin=false){
         echo '耗存: '.round(memory_get_usage()/1000000,3).'M<br/>';
         $t = 0;
     }
+}
+
+function clearSession(){
+    session_start();
+    $_SESSION = array();
+    if(isset($_COOKIE[session_name()]))
+        setcookie(session_name(), '', time()-42000, '/');
+    session_destroy();
 }
 
 /****************************
@@ -108,8 +116,9 @@ function pdo_setdata($tableName, $update, $condition){
           payment
 ****************************/
 //微信支付文档: https://pay.weixin.qq.com/wiki/doc/api/index.html
-//阿里支付文档:
+//阿里支付文档: https://docs.open.alipay.com/203
 
+//通过UA判断支付方式
 function getPaymentPlatform(){
     if(isset($_SERVER['HTTP_USER_AGENT'])){
         $UA = $_SERVER['HTTP_USER_AGENT'];
@@ -117,121 +126,52 @@ function getPaymentPlatform(){
         else if(strstr($UA ,'AlipayClient')) return 'alipay'; 
         else return 'unknow';
     }
-
     return 'No HTTP_USER_AGENT';
 }
 
-//统一下单API
-//JSAPI 必须传openid
-function wxPayUnifiedOrder($shop_name,$total_price,$notify_url,$openid=""){
-    global $_W;
-    $appid = '';
-    $appsecret='';
-    $url = "https://api.mch.weixin.qq.com/pay/unifiedorder";
-    $key = '';
-    if(!empty($openid)) $data['openid'] = $openid;
+//微信下单示例，仅供参考
+if (!function_exists(wxpay)){
+function wxpay(){
+    $config['mch_id']     = 'your mch_id';
+    $config['appid']      = 'your appid';
+    $config['appsecret']  = 'your appsecret';
+    $config['key']        = 'your pay key';
+    $config['notify_url'] = 'http://'. $_SERVER['SERVER_ADDR'].'/notify.php';
 
-    $data['appid']              = '';
-    $data['mch_id']             = '';
-    $data['nonce_str']          = makeNonceStr();
-    $data['device_info']        = "WEB";
-    $data['body']               = "$shop_name";
-    $data['out_trade_no']       = makeOrderNo();
-    $data['total_fee']          = $total_price;
-    $data['spbill_create_ip']   = $_SERVER['REMOTE_ADDR'];
-    $data['notify_url']         = "http://www.baidu.com";
-    $data['trade_type']         = "JSAPI";
-    $data['sign']               = makeSign($data, $key);
-    dump($data, 0);
-    $xml = xml_encode($data);
-    $res = sendHttpXml($url, $xml);
-    $data = xml_decode($res);
-    dump($data);
+    $param['body'] = 'your payment title';
+    $param['total_fee'] = 300;
+    $param['openid'] = $openid;
+    $param['out_trade_no'] = $out_trade_no;
+
+    //记得配置授权目录，支付目录
+    load()->classs('mywxpay');
+    $pay = new Mywxpay($config);
+    $jsp = $pay->unifiedOrder($param);
+    include $this->template('wxpay');
+    exit;
+}
 }
 
-//创建订单并支付
-//阿里手机网站支付
-function aliPayWapPay($config, $param){
-    load()->classs('myalipay');
-    $pay = new Myalipay($config);
-    $pay->wapPay($param);
-}
-
-
-//生成订单号
-function makeOrderNo(){
-    return md5("123".time()."456");
-}
-
-
-//产生随机字符串
-function makeNonceStr($length = 32)
-{
-    $chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    $str = "";
-    for ($i = 0; $i < $length; $i++) {
-        $str .= substr($chars, mt_rand(0, strlen($chars) - 1), 1);
+//阿里下单示例,仅供参考
+if (!function_exists(alipay)){
+    function alipay(){
+        $config['app_id'] = 'your app_id';
+        $config['notify_url'] = 'http://'. $_SERVER['SERVER_ADDR'].'/notify_url.php';
+        $config['return_url'] = 'http://'. $_SERVER['SERVER_ADDR'].'/return_url.php';
+        $config['alipay_public_key'] = 'MIIBIjANBg...';
+        $config['merchant_private_key'] = 'MIIEvQIBADANBgkqhkiG9...';
+    
+        $param['subject']       = 'payment subject';
+        $param['body']          = 'customer description';
+        $param['total_amount']  = 300;
+        $param['out_trade_no']  = date('YmdHis').time();
+    
+        //执行完自动弹出支付,界面不像微信要自己写
+        load()->classs('myalipay');
+        $pay = new Myalipay($config);
+        $pay->wapPay($param);
     }
-    return $str;
 }
-
-
-//md5签名算法
-function makeSign($params, $key){
-    dump($params,0);
-    //按关键字序排序参数
-    ksort($params);
-    $string = toUrlParams($params);
-    //在string后加入KEY
-    $string = $string . "&key=" . $key;
-    //MD5加密
-    $string = md5($string);
-    //所有字符转为大写
-    $result = strtoupper($string);
-    return $result;
-}
-
-//数组转URL参数字符
-function toUrlParams($urlObj) {
-    $buff = "";
-    foreach ($urlObj as $k => $v) {
-        if ($k != "sign") {
-            $buff .= $k . "=" . $v . "&";
-        }
-    }
-    $buff = trim($buff, "&");
-    return $buff;
-}
-
-//数组转xml
-//微擎自带： framework/function/global.func.php:924 array2Xml
-function xml_encode($data){
-    if (!is_array($data) || count($data) <= 0) {
-        echo("数组数据异常！");
-    }
-
-    $xml = "<xml>";
-    foreach ($data as $key => $val) {
-        if (is_numeric($val)) {
-            $xml .= "<" . $key . ">" . $val . "</" . $key . ">";
-        } else {
-            $xml .= "<" . $key . "><![CDATA[" . $val . "]]></" . $key . ">";
-        }
-    }
-    $xml .= "</xml>";
-    return $xml;
-}
-
-//xml转数组
-//微擎自带： framework/function/global.func.php:943 xml_decodeay
-function xml_decode($xml){
-    if (!$xml) { die("xml数据异常！"); }
-    //将XML转为array 禁止引用外部xml实体
-    libxml_disable_entity_loader(true);
-    $data = json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
-    return $data;
-}
-
 
 /****************************
           Markdown
