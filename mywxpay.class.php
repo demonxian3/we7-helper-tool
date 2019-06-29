@@ -19,6 +19,11 @@ class Mywxpay{
         else
             $this->payParam['out_trade_no'] = $param['out_trade_no'];
         
+        //服务商版需要多传子商户id
+        if(!empty($this->config['sub_mch_id']) && trim($this->config['sub_mch_id'])){
+            $this->payParam['sub_mch_id']   = $this->config['sub_mch_id'];
+        }
+
 
         //构造下单必填XML
         $this->payParam['appid']        = $this->config['appid'];
