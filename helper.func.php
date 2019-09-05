@@ -130,7 +130,7 @@ function getPaymentPlatform(){
 }
 
 //微信下单示例，仅供参考
-if (!function_exists(wxpay)){
+if (!function_exists("wxpay")){
 function wxpay(){
     $config['mch_id']     = 'your mch_id';
     $config['appid']      = 'your appid';
@@ -153,7 +153,7 @@ function wxpay(){
 }
 
 //阿里下单示例,仅供参考
-if (!function_exists(alipay)){
+if (!function_exists("alipay")){
     function alipay(){
         $config['app_id'] = 'your app_id';
         $config['notify_url'] = 'http://'. $_SERVER['SERVER_ADDR'].'/notify_url.php';
